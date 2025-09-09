@@ -1,0 +1,861 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WordMatch</title>
+    <link rel="icon" type="image/x-icon" href="static/img/favicon.png">
+    <link rel="stylesheet" href="static/style.css">
+</head>
+<body>
+
+<div id="topLeftMenu">
+    <a id="goHomeBtn" class="topMenuButton" title="Kezdőlap" onclick="goHome()">&#127968;</a>
+    <a id="openSettingsBtn" class="topMenuButton" title="Beállítások">&#128736;</a>
+    <div id="langBtn" class="lang-dropdown">
+        <a class="topMenuButton">
+            <img src="static/img/flaghu.png" width="20" height="20">
+        </a>
+        <div class="lang-dropdown-content">
+            <a data-lang="hu"><img src="static/img/flaghu.png" width="20" height="20"> Magyar</a>
+            <a data-lang="de"><img src="static/img/flagde.png" width="20" height="20"> Deutsch</a>
+            <a data-lang="en"><img src="static/img/flagen.png" width="20" height="20"> English</a>
+        </div>
+     </div>
+    <!--<a class="topMenuButton" title="Küldés Email-ben" href="#" onclick="javascript:window.location='mailto:?subject=Word Match link&body=Üdv,\na WordMatch az általam előkészített beállításokkal itt érhető el:' + window.location.href;">&#128231;</a>-->
+    <a id="shareUrlBtn" class="topMenuButton" title="Link másolása az aktuális beállításokkal" onclick="javascript:navigator.clipboard.writeText(window.location.href);;">&#128203;</a>
+     
+</div>
+<div id="gameTitle">
+    <!-- <h1>
+        <div class="inverse_italic" id="titleText1" title="v1.2">Word</div>
+        <div class="italic" id="titleText2" title="v1.2">matcH</div>
+    </h1> -->
+    <img src="static/img/title.png" height="60">
+</div>
+
+<div id="settingsPopup" class="popup">
+    <div style="float: right;">
+        <!--<a href="http://kristof.helmrich.hu" class="topMenuButton" title="author" target="_blank">&#128119;</a>-->
+        <a id="resetSettingsBtn" class="topMenuButton" title="Beállítások visszaállítása" onclick="resetSettings()"> &#10226;</a>
+        <a class="topMenuButton" title="Támogatás - hívj meg egy kávéra &#128522;" href="https://buymeacoffee.com/khelmric">&#9749;</a>  
+    </div>
+    <div class="popup-header">Beállítások</div>
+    <div class="popup-body">
+        <form id="settingsForm">
+            <label for="syllables">Max szótag:</label>
+            <select id="syllables" name="syllables">
+                <option value="1">1</option>
+                <option value="2">2</option>
+                <option value="3">3</option>
+                <option value="4">4</option>
+                <option value="5">5</option>
+                <option value="100">5+</option>
+            </select>
+            <br><br>
+            <label>Szükséges betűk:</label><br>
+            <div id="includeCharsContainer">
+                <select id="includeChar1" name="includeChar1" class="include-char-dropdown"></select>
+                <select id="includeChar2" name="includeChar2" class="include-char-dropdown"></select>
+                <select id="includeChar3" name="includeChar3" class="include-char-dropdown"></select>
+            </div>
+            <br><br>
+            <label>Kizárandó betűk:</label><br>
+            <div id="excludeCharsContainer"></div>
+            <br><br>
+            <label for="counter">Visszaszámláló: </label><input id="counter" name="counter" type="number" value="20" min="5" max="99" maxlength="2">s
+            <br><br>
+            <button class="bigButton" type="button" onclick="submitSettings()">OK</button>
+        </form>
+    </div>
+</div>
+
+<div id="header">
+    <div id="countdown" class="hidden"><span>0</span></div>
+    <div class="hidden" id="status">
+        <span id="lives"></span>
+        <span id="level">1. szint</span>
+    </div>
+</div>
+
+<div id="controls">
+    <button id="startButton">Start</button>
+    <button class="hidden" id="stopButton">Stop</button>
+</div>
+
+<div class="hidden" id="game">
+    <div class="card" id="card1"></div>
+    <div class="card" id="card2"></div>
+</div>
+
+<div id="message"></div>
+
+<script>
+    let lang = localStorage.getItem("lang") || "hu";
+    console.log(lang);
+    let filePath;
+
+    if (typeof lang === "undefined" || lang === null || lang.trim() === "") {
+        lang = "hu"; // Set default language to Hungarian
+        localStorage.setItem("lang", lang);
+    }
+
+    function loadFileToArray(filePath, callback) {
+        fetch(filePath)
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Network response was not ok ' + response.statusText);
+                }
+                return response.text();
+            })
+            .then(text => {
+                words = text.split('\n').map(word => word.trim()).filter(word => word.length > 0);
+                callback(null, words);
+            })
+            .catch(error => {
+                console.error('Error loading file:', error);
+                callback(error, null);
+            });
+    }
+
+    function loadFile(lang) {
+        filePath = 'static/txt/words-' + lang + '.txt';
+        loadFileToArray(filePath, (error, loadedWords) => {
+            if (error) {
+                console.error('Failed to load file:', error);
+                return;
+            }
+        });
+    }
+
+    loadFile(lang);
+
+    const letters = [
+        { letter: "a", id: "a" },
+        { letter: "á", id: "aa" },
+        { letter: "b", id: "b" },
+        { letter: "c", id: "c" },
+        { letter: "cs", id: "cs" },
+        { letter: "d", id: "d" },
+        { letter: "dz", id: "dz" },
+        { letter: "dzs", id: "dzs" },
+        { letter: "e", id: "e" },
+        { letter: "é", id: "ee" },
+        { letter: "f", id: "f" },
+        { letter: "g", id: "g" },
+        { letter: "gy", id: "gy" },
+        { letter: "h", id: "h" },
+        { letter: "i", id: "i" },
+        { letter: "í", id: "ii" },
+        { letter: "j", id: "j" },
+        { letter: "k", id: "k" },
+        { letter: "l", id: "l" },
+        { letter: "ly", id: "ly" },
+        { letter: "m", id: "m" },
+        { letter: "n", id: "n" },
+        { letter: "ny", id: "ny" },
+        { letter: "o", id: "o" },
+        { letter: "ó", id: "oo" },
+        { letter: "ö", id: "oe" },
+        { letter: "ő", id: "ooe" },
+        { letter: "p", id: "p" },
+        { letter: "q", id: "q" },
+        { letter: "r", id: "r" },
+        { letter: "s", id: "s" },
+        { letter: "sz", id: "sz" },
+        { letter: "t", id: "t" },
+        { letter: "ty", id: "ty" },
+        { letter: "u", id: "u" },
+        { letter: "ú", id: "uu" },
+        { letter: "ü", id: "ue" },
+        { letter: "ű", id: "uue" },
+        { letter: "v", id: "v" },
+        { letter: "w", id: "w" },
+        { letter: "x", id: "x" },
+        { letter: "y", id: "y" },
+        { letter: "z", id: "z" },
+        { letter: "zs", id: "zs" }
+    ];
+    const includeCharsContainer = document.querySelectorAll('.include-char-dropdown');
+
+    const defaultOption = document.createElement("option");
+    defaultOption.value = null;
+    defaultOption.text = "";
+
+    includeCharsContainer.forEach(dropdown => {
+        dropdown.appendChild(defaultOption.cloneNode(true));
+        letters.forEach(item => {
+            const option = document.createElement("option");
+            option.value = item.letter;
+            option.text = item.letter;
+            dropdown.appendChild(option);
+        });
+    });
+
+    const excludeCharsContainer = document.getElementById("excludeCharsContainer");
+
+    letters.forEach(item => {
+        const label = document.createElement("label");
+        label.className = "nowrap";
+        const checkbox = document.createElement("input");
+        
+        checkbox.type = "checkbox";
+        checkbox.id = `exclude_${item.id}`;
+        checkbox.name = `exclude_${item.id}`;
+        checkbox.value = "y";
+        
+        label.htmlFor = `exclude_${item.id}`;
+        label.appendChild(checkbox);
+        label.appendChild(document.createTextNode(item.letter));
+        
+        excludeCharsContainer.appendChild(label);
+    });
+
+
+    const vowels = ["a", "á", "e", "é", "i", "í", "o", "ó", "ö", "ő", "u", "ú", "ü", "ű"]; 
+
+    let words = []; // Global variable to store words
+    let excludedChars = []; // Global variable to store excluded chars
+    const currentUrl = window.location.href;
+    //console.log(currentUrl);
+  
+    let lives = 5;
+    let commonWord = "";
+    let level = 1;
+    let levelJump = 5;
+    let roundTimer;
+    let wordCount = 4;
+    let countdownTime = 20;
+
+    const startButton = document.getElementById("startButton");
+    const stopButton = document.getElementById("stopButton");
+    const card1 = document.getElementById("card1");
+    const card2 = document.getElementById("card2");
+    const levelDisplay = document.getElementById("level");
+    const livesDisplay = document.getElementById("lives");
+    const countdownDisplay = document.getElementById("countdown");
+    const countdownTimeInput = document.getElementById("countdownTime");
+    const wordCountInput = document.getElementById("wordCount");
+    const messageDisplay = document.getElementById("message");
+
+    startButton.addEventListener("click", startGame);
+    stopButton.addEventListener("click", stopGame);
+
+    function toggleItems() {
+        document.getElementById("startButton").classList.toggle("hidden");
+        document.getElementById("stopButton").classList.toggle("hidden");
+        document.getElementById("status").classList.toggle("hidden");
+        document.getElementById("countdown").classList.toggle("hidden");
+        document.getElementById("game").classList.toggle("hidden");
+    }
+
+    function startGame() {
+        document.getElementById("openSettingsBtn").classList.add("hidden");
+        document.getElementById("shareUrlBtn").classList.add("hidden");
+        document.getElementById("langBtn").classList.add("hidden");
+        level = 1;
+        lives = 5;
+        countdownTime = 20;
+        wordCount = 4;
+        levelDisplay.textContent = `${level}. szint`;
+        livesDisplay.textContent = getLives(lives);
+        toggleItems();
+        countdownDisplay.textContent = countdownTime;
+        resetGame();
+    }
+
+    function stopGame() {
+        clearInterval(level);
+        clearInterval(roundTimer);
+        toggleItems()
+        alert(`\ud83d\uded1 Játék megállítva. Elért szint:${level}`);
+        document.getElementById("openSettingsBtn").classList.remove("hidden");
+        document.getElementById("shareUrlBtn").classList.remove("hidden");
+        document.getElementById("langBtn").classList.remove("hidden");
+    }
+
+    function resetGame() {
+        clearInterval(roundTimer);
+        card1.innerHTML = "";
+        card2.innerHTML = "";
+        //commonWord = words[Math.floor(Math.random() * words.length)];
+        //wordsWithoutCommonWord = words.filter(e => e !== commonWord);
+        //const selectedWords = getUniqueWords(wordsWithoutCommonWord, wordCount * 2 - 2);
+        const uniqueWords = getUniqueWords(words, wordCount * 2 - 1);
+        const selectedWords = [...uniqueWords.slice(1,wordCount * 2 - 1)];
+        commonWord = [...uniqueWords.slice(0,1)];
+        const card1Words = [...selectedWords.slice(0,wordCount - 1), commonWord];
+        const card2Words = [...selectedWords.slice(wordCount - 1,wordCount * 2 - 2), commonWord];
+        renderWords(card1, shuffleArray(card1Words));
+        renderWords(card2, shuffleArray(card2Words));
+        startRoundTimer();
+    }
+
+    function startRoundTimer() {
+        countdownTime = document.getElementById('counter').value;
+        countdownDisplay.textContent = countdownTime;
+        roundTimer = setInterval(() => {
+            countdownTime--;
+            countdownDisplay.textContent = countdownTime;
+            if (countdownTime <= 0) {
+                clearInterval(roundTimer);
+                lives--;
+                livesDisplay.textContent = getLives(lives);
+                if (lives === 0) {
+                    setTimeout(() => {
+                        clearInterval(level);
+                        toggleItems();
+                        alert(`\u2620\ufe0f Játék vége. Elért szint: ${level}`);
+                        document.getElementById("openSettingsBtn").classList.remove("hidden");
+                        document.getElementById("shareUrlBtn").classList.remove("hidden");
+                        document.getElementById("langBtn").classList.remove("hidden");
+                    }, 100); // add a small delay (100ms) to allow UI updates
+                } else {
+                    showMessage(`\ud83d\ude34 Lejárt az idő.`, "red");
+                    resetGame();
+                }
+            }
+        }, 1000);
+    }
+
+    function renderWords(card, wordsArray) {
+        wordsArray.forEach(word => {
+            const wordElement = document.createElement("div");
+            wordElement.textContent = word;
+            wordElement.className = "word";
+            wordElement.style.color = getRandomColor();
+            wordElement.style.fontSize = `${Math.floor(Math.random() * 20) + 20}px`;
+            wordElement.style.fontFamily = getRandomFont();
+            wordElement.addEventListener("click", () => handleWordClick(word));
+            wordElement.addEventListener("mouseover", () => wordElement.style.textDecoration = "underline");
+            wordElement.addEventListener("mouseout", () => wordElement.style.textDecoration = "none");
+            card.appendChild(wordElement);
+        });
+    }
+
+    function handleWordClick(word) {
+        clearInterval(roundTimer);
+        if (word === commonWord) {
+            levelJump--;
+            if (levelJump === 0) {
+                levelJump = 5;
+                level++;
+                wordCount++;
+                messageNextLevel();
+            } else {
+                showMessage("\ud83d\udc4d Helyes!", "green");
+            }
+            levelDisplay.textContent = `${level}. szint`;
+            resetGame();
+        } else {
+            lives--;
+            livesDisplay.textContent = getLives(lives);
+            if (lives === 0) {
+                setTimeout(() => {
+                    clearInterval(level);
+                    toggleItems();
+                    alert(`\u2620\ufe0f Játék vége. Elért szint: ${level}`);
+                    document.getElementById("openSettingsBtn").classList.remove("hidden");
+                    document.getElementById("shareUrlBtn").classList.remove("hidden");
+                    document.getElementById("langBtn").classList.remove("hidden");
+                }, 100); // add a small delay (100ms) to allow UI updates
+            } else {
+                showMessage(`\ud83e\udd74 Rossz válasz!`, "red");
+                resetGame();
+            }
+        }
+    }
+
+    function showMessage(message, color) {
+        messageDisplay.textContent = message;
+        messageDisplay.style.color = color;
+        setTimeout(() => {
+            messageDisplay.textContent = "";
+        }, 3000);
+    }
+
+    function shuffleArray(array) {
+        for (let i = array.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [array[i], array[j]] = [array[j], array[i]];
+        }
+        return array;
+    }
+
+    function countSyllables(word) {
+        word = word.toLowerCase();
+        if (lang === "hu") {
+            // Hungarian: Count vowels as syllables
+            const vowels = ["a", "á", "e", "é", "i", "í", "o", "ó", "ö", "ő", "u", "ú", "ü", "ű"];
+            let count = 0;
+            for (let v of vowels) {
+                count += (word.split(v).length - 1);
+            }
+            return Math.max(1, count); // Ensure at least 1 syllable
+
+        } else if (lang === "en") {
+            // English: Use regex to detect syllables
+            let syllableMatches = word.match(/[aeiouy]+/g);
+            let syllableCount = syllableMatches ? syllableMatches.length : 0;
+
+            // If the word ends with "e" but not in a diphthong, reduce syllable count
+            if (word.endsWith("e") && word.match(/[aeiouy][^aeiouy]e$/)) {
+                syllableCount--;
+            }
+            return Math.max(1, syllableCount);
+
+        } else if (lang === "de") {
+            // German: Count vowels, but handle "ie" as a single syllable
+            const vowels = ["a", "ä", "e", "i", "o", "ö", "u", "ü"];
+            let count = 0;
+
+            for (let v of vowels) {
+                count += (word.split(v).length - 1);
+            }
+
+            // decrease for vowels "eu" and "ie"
+            count -= (word.split("ie").length - 1);
+            count -= (word.split("eu").length - 1);
+
+            return Math.max(1, count);
+        }
+
+        return 1; // Default case (should not be reached)
+    }
+
+    function getUniqueWords(wordsArray, count) {
+        // let maxOccurrences = parseInt(document.getElementById('syllables').value, 10);
+        let maxOccurrences = document.getElementById('syllables').value;
+
+        const filteredWords = wordsArray.filter(word => {
+            // Check for excluded characters
+            for (let exchar of excludedChars) {
+                if (word.includes(exchar.toLowerCase())) {
+                    return false;
+                }
+            }
+            for (let inchar of includedChars) {
+                if (!word.includes(inchar.toLowerCase())) {
+                    return false;
+                }
+            }
+
+            // Check syllable count based on language
+            return countSyllables(word) <= maxOccurrences;
+        });
+
+        // If no matching words found, return null
+        if (filteredWords.length === 0) {
+            return null;
+        }
+
+        // Random selection from the filtered list
+        const shuffledArray = shuffleArray(filteredWords);
+        return shuffledArray.slice(0, count);
+    }
+
+
+    function getRandomColor() {
+        /*const letters = "0123456789ABCDEF";*/
+        const letters = "0123456789ABCD";
+        let color = "#";
+        for (let i = 0; i < 6; i++) {
+            color += letters[Math.floor(Math.random() * 16)];
+        }
+        return color;
+    }
+
+    function getRandomFont() {
+        const fonts = ["Arial", "Verdana", "Times New Roman", "Courier New", "Georgia"];
+        return fonts[Math.floor(Math.random() * fonts.length)];
+    }
+
+    function getLives(lives) {
+        let livesString = "";
+        for (let i = 5 - lives; i > 0; i--) {
+            livesString = livesString.concat("\uD83D\uDDA4");
+        }
+        for (let i = lives; i > 0; i--) {
+            livesString = livesString.concat("\uD83D\uDC9A");
+        }
+        return livesString;
+    }
+
+    function messageNextLevel() {
+        const messageDiv = document.getElementById('message');
+        const originalText = messageDiv.innerHTML;
+        const newText = '\ud83d\udca5 Következő szint! \ud83d\udca5';
+
+        // Create a temporary span to animate
+        const tempSpan = document.createElement('span');
+        tempSpan.innerHTML = newText;
+        tempSpan.style.display = 'inline-block';
+        tempSpan.style.fontSize = '0';
+        tempSpan.style.transition = 'font-size 0.5s, opacity 0.5s';
+        //tempSpan.style.color = 'bule';
+        tempSpan.style.position = 'relative';
+        tempSpan.style.margin = '20px 10px';
+        messageDiv.innerHTML = '';
+        messageDiv.appendChild(tempSpan);
+
+        /*const styleSheet = document.styleSheets[0];
+        const keyframes = `
+            @keyframes glitter {
+                0% { background-position: 0% 50%; }
+                50% { background-position: 100% 50%; }
+                100% { background-position: 0% 50%; }
+            }
+        `;
+        styleSheet.insertRule(keyframes, styleSheet.cssRules.length);*/
+
+        // Animate text to grow
+        setTimeout(() => {
+            tempSpan.style.fontSize = '1em';
+        }, 10);
+
+        // Blink effect
+        setTimeout(() => {
+            tempSpan.style.opacity = '0';
+        }, 1500);
+        setTimeout(() => {
+            tempSpan.style.opacity = '1';
+        }, 2000);
+        setTimeout(() => {
+            tempSpan.style.opacity = '0';
+        }, 2500);
+        setTimeout(() => {
+            tempSpan.style.opacity = '1';
+        }, 3000);
+
+        // Revert to the original text after 3 seconds
+        setTimeout(() => {
+            messageDiv.innerHTML = originalText;
+        }, 3000);
+    }
+
+    // Settings popup
+    document.getElementById('openSettingsBtn').addEventListener('click', function() {
+        document.getElementById("startButton").classList.toggle("hidden");
+        document.getElementById('settingsPopup').classList.toggle('active');
+    });
+
+    function submitSettings() {
+        const form = document.getElementById('settingsForm');
+        const formData = new FormData(form);
+        const params = new URLSearchParams();
+
+        formData.forEach((value, key) => {
+            params.append(key, value);
+        });
+
+        const url = `${window.location.pathname}?${params.toString()}`;
+        document.getElementById("startButton").classList.toggle("hidden");
+        window.location.href = url;
+    }
+
+    function getURLParameters() {
+        const params = new URLSearchParams(window.location.search);
+        return {
+            syllables: params.has('syllables') ? params.get('syllables') : "5",
+            counter: params.has('counter') ? params.get('counter') : "20",
+            includeChar1: params.has('includeChar1') ? params.get('includeChar1') : null,
+            includeChar2: params.has('includeChar2') ? params.get('includeChar2') : null, 
+            includeChar3: params.has('includeChar3') ? params.get('includeChar3') : null, 
+            exclude_a: params.has('exclude_a') ? params.get('exclude_a') : null,
+            exclude_aa: params.has('exclude_aa') ? params.get('exclude_aa') : null,
+            exclude_b: params.has('exclude_b') ? params.get('exclude_b') : null,
+            exclude_c: params.has('exclude_c') ? params.get('exclude_c') : null,
+            exclude_cs: params.has('exclude_cs') ? params.get('exclude_cs') : null,
+            exclude_d: params.has('exclude_d') ? params.get('exclude_d') : null,
+            exclude_dz: params.has('exclude_dz') ? params.get('exclude_dz') : null,
+            exclude_dzs: params.has('exclude_dzs') ? params.get('exclude_dzs') : null,
+            exclude_e: params.has('exclude_e') ? params.get('exclude_e') : null,
+            exclude_ee: params.has('exclude_ee') ? params.get('exclude_ee') : null,
+            exclude_f: params.has('exclude_f') ? params.get('exclude_f') : null,
+            exclude_g: params.has('exclude_g') ? params.get('exclude_g') : null,
+            exclude_gy: params.has('exclude_gy') ? params.get('exclude_gy') : null,
+            exclude_h: params.has('exclude_h') ? params.get('exclude_h') : null,
+            exclude_i: params.has('exclude_i') ? params.get('exclude_i') : null,
+            exclude_ii: params.has('exclude_ii') ? params.get('exclude_ii') : null,
+            exclude_j: params.has('exclude_j') ? params.get('exclude_j') : null,
+            exclude_k: params.has('exclude_k') ? params.get('exclude_k') : null,
+            exclude_l: params.has('exclude_l') ? params.get('exclude_l') : null,
+            exclude_ly: params.has('exclude_ly') ? params.get('exclude_ly') : null,
+            exclude_m: params.has('exclude_m') ? params.get('exclude_m') : null,
+            exclude_n: params.has('exclude_n') ? params.get('exclude_n') : null,
+            exclude_ny: params.has('exclude_ny') ? params.get('exclude_ny') : null,
+            exclude_o: params.has('exclude_o') ? params.get('exclude_o') : null,
+            exclude_oo: params.has('exclude_oo') ? params.get('exclude_oo') : null,
+            exclude_oe: params.has('exclude_oe') ? params.get('exclude_oe') : null,
+            exclude_ooe: params.has('exclude_ooe') ? params.get('exclude_ooe') : null,
+            exclude_p: params.has('exclude_p') ? params.get('exclude_p') : null,
+            exclude_q: params.has('exclude_q') ? params.get('exclude_q') : null,
+            exclude_r: params.has('exclude_r') ? params.get('exclude_r') : null,
+            exclude_s: params.has('exclude_s') ? params.get('exclude_s') : null,
+            exclude_sz: params.has('exclude_sz') ? params.get('exclude_sz') : null,
+            exclude_t: params.has('exclude_t') ? params.get('exclude_t') : null,
+            exclude_ty: params.has('exclude_ty') ? params.get('exclude_ty') : null,
+            exclude_u: params.has('exclude_u') ? params.get('exclude_u') : null,
+            exclude_uu: params.has('exclude_uu') ? params.get('exclude_uu') : null,
+            exclude_ue: params.has('exclude_ue') ? params.get('exclude_ue') : null,
+            exclude_uue: params.has('exclude_uue') ? params.get('exclude_uue') : null,
+            exclude_v: params.has('exclude_v') ? params.get('exclude_v') : null,
+            exclude_w: params.has('exclude_w') ? params.get('exclude_w') : null,
+            exclude_x: params.has('exclude_x') ? params.get('exclude_x') : null,
+            exclude_y: params.has('exclude_y') ? params.get('exclude_y') : null,
+            exclude_z: params.has('exclude_z') ? params.get('exclude_z') : null,
+            exclude_zs: params.has('exclude_zs') ? params.get('exclude_zs') : null
+        };
+    }
+
+    function applySettings() {
+        const settings = getURLParameters();
+        includedChars = [];
+        excludedChars = [];
+
+        if (settings.syllables) {
+            document.getElementById('syllables').value = settings.syllables;
+        }
+        if (settings.counter) {
+            document.getElementById('counter').value = settings.counter;
+        }
+        if (settings.includeChar1) {
+            document.getElementById('includeChar1').value = settings.includeChar1;
+            if (document.getElementById('includeChar1').value != "null") {
+                includedChars.push(document.getElementById('includeChar1').value);
+            }
+        }
+        if (settings.includeChar2) {
+            document.getElementById('includeChar2').value = settings.includeChar2;
+            if (document.getElementById('includeChar2').value != "null") {
+                includedChars.push(document.getElementById('includeChar2').value);
+            }
+        }
+        if (settings.includeChar3) {
+            document.getElementById('includeChar3').value = settings.includeChar3;
+            if (document.getElementById('includeChar3').value != "null") {
+                includedChars.push(document.getElementById('includeChar3').value);
+            }
+        }
+        if (settings.exclude_a) {
+            document.getElementById('exclude_a').checked = true;
+            excludedChars.push("a");
+        } 
+        if (settings.exclude_aa) {
+            document.getElementById('exclude_aa').checked = true;
+            excludedChars.push("á");
+        } 
+        if (settings.exclude_b) {
+            document.getElementById('exclude_b').checked = true;
+            excludedChars.push("b");
+        } 
+        if (settings.exclude_c) {
+            document.getElementById('exclude_c').checked = true;
+            excludedChars.push("c");
+        } 
+        if (settings.exclude_cs) {
+            document.getElementById('exclude_cs').checked = true;
+            excludedChars.push("cs");
+        } 
+        if (settings.exclude_d) {
+            document.getElementById('exclude_d').checked = true;
+            excludedChars.push("d");
+        }
+        if (settings.exclude_dz) {
+            document.getElementById('exclude_dz').checked = true;
+            excludedChars.push("dz");
+        } 
+        if (settings.exclude_dzs) {
+            document.getElementById('exclude_dzs').checked = true;
+            excludedChars.push("dzs");
+        } 
+        if (settings.exclude_e) {
+            document.getElementById('exclude_e').checked = true;
+            excludedChars.push("e");
+        } 
+        if (settings.exclude_ee) {
+            document.getElementById('exclude_ee').checked = true;
+            excludedChars.push("é");
+        } 
+        if (settings.exclude_f) {
+            document.getElementById('exclude_f').checked = true;
+            excludedChars.push("f");
+        } 
+        if (settings.exclude_g) {
+            document.getElementById('exclude_g').checked = true;
+            excludedChars.push("g");
+        } 
+        if (settings.exclude_gy) {
+            document.getElementById('exclude_gy').checked = true;
+            excludedChars.push("gy");
+        }
+        if (settings.exclude_h) {
+            document.getElementById('exclude_h').checked = true;
+            excludedChars.push("h");
+        } 
+        if (settings.exclude_i) {
+            document.getElementById('exclude_i').checked = true;
+            excludedChars.push("i");
+        } 
+        if (settings.exclude_ii) {
+            document.getElementById('exclude_ii').checked = true;
+            excludedChars.push("í");
+        } 
+        if (settings.exclude_j) {
+            document.getElementById('exclude_j').checked = true;
+            excludedChars.push("j");
+        } 
+        if (settings.exclude_k) {
+            document.getElementById('exclude_k').checked = true;
+            excludedChars.push("k");
+        } 
+        if (settings.exclude_l) {
+            document.getElementById('exclude_l').checked = true;
+            excludedChars.push("l");
+        } 
+        if (settings.exclude_ly) {
+            document.getElementById('exclude_ly').checked = true;
+            excludedChars.push("ly");
+        }
+        if (settings.exclude_m) {
+            document.getElementById('exclude_m').checked = true;
+            excludedChars.push("m");
+        } 
+        if (settings.exclude_n) {
+            document.getElementById('exclude_n').checked = true;
+            excludedChars.push("n");
+        } 
+        if (settings.exclude_ny) {
+            document.getElementById('exclude_ny').checked = true;
+            excludedChars.push("ny");
+        } 
+        if (settings.exclude_o) {
+            document.getElementById('exclude_o').checked = true;
+            excludedChars.push("o");
+        } 
+        if (settings.exclude_oo) {
+            document.getElementById('exclude_oo').checked = true;
+            excludedChars.push("ó");
+        } 
+        if (settings.exclude_oe) {
+            document.getElementById('exclude_oe').checked = true;
+            excludedChars.push("ö");
+        } 
+        if (settings.exclude_ooe) {
+            document.getElementById('exclude_ooe').checked = true;
+            excludedChars.push("ő");
+        }
+        if (settings.exclude_p) {
+            document.getElementById('exclude_p').checked = true;
+            excludedChars.push("p");
+        } 
+        if (settings.exclude_q) {
+            document.getElementById('exclude_q').checked = true;
+            excludedChars.push("q");
+        } 
+        if (settings.exclude_r) {
+            document.getElementById('exclude_r').checked = true;
+            excludedChars.push("r");
+        } 
+        if (settings.exclude_s) {
+            document.getElementById('exclude_s').checked = true;
+            excludedChars.push("s");
+        } 
+        if (settings.exclude_sz) {
+            document.getElementById('exclude_sz').checked = true;
+            excludedChars.push("sz");
+        } 
+        if (settings.exclude_t) {
+            document.getElementById('exclude_t').checked = true;
+            excludedChars.push("t");
+        } 
+        if (settings.exclude_ty) {
+            document.getElementById('exclude_ty').checked = true;
+            excludedChars.push("ty");
+        }
+        if (settings.exclude_u) {
+            document.getElementById('exclude_u').checked = true;
+            excludedChars.push("u");
+        } 
+        if (settings.exclude_uu) {
+            document.getElementById('exclude_uu').checked = true;
+            excludedChars.push("ú");
+        } 
+        if (settings.exclude_ue) {
+            document.getElementById('exclude_ue').checked = true;
+            excludedChars.push("ü");
+        } 
+        if (settings.exclude_uue) {
+            document.getElementById('exclude_uue').checked = true;
+            excludedChars.push("ű");
+        } 
+        if (settings.exclude_v) {
+            document.getElementById('exclude_v').checked = true;
+            excludedChars.push("v");
+        } 
+        if (settings.exclude_w) {
+            document.getElementById('exclude_w').checked = true;
+            excludedChars.push("w");
+        }
+        if (settings.exclude_x) {
+            document.getElementById('exclude_x').checked = true;
+            excludedChars.push("x");
+        } 
+        if (settings.exclude_y) {
+            document.getElementById('exclude_y').checked = true;
+            excludedChars.push("y");
+        } 
+        if (settings.exclude_z) {
+            document.getElementById('exclude_z').checked = true;
+            excludedChars.push("z");
+        } 
+        if (settings.exclude_zs) {
+            document.getElementById('exclude_zs').checked = true;
+            excludedChars.push("zs");
+        } 
+        //console.log('Settings:', settings);
+    }
+
+    function goHome() {
+        window.location.reload();
+    }
+
+    function resetSettings() {
+        //const url = `${window.location.pathname}`;
+        //window.location = window.location.href.split("?")[0];
+        //window.location.replace(location.pathname);
+        //window.location = window.location.pathname + window.location.hash;
+        window.location.href = location.pathname;
+        //window.location.reload();
+    }
+
+    // document.addEventListener('DOMContentLoaded', applySettings);
+
+    document.addEventListener("DOMContentLoaded", function () {
+        // Apply settings (previously in applySettings)
+        applySettings(); 
+
+        // Restore language from localStorage or default to "hu"
+        lang = localStorage.getItem("lang") || "hu";
+        
+        loadFile(lang); // Ensure the correct file loads initially
+
+        document.querySelectorAll(".lang-dropdown-content a").forEach(item => {
+            item.addEventListener("click", function () {
+                lang = this.getAttribute("data-lang"); // Update lang value
+                localStorage.setItem("lang", lang);
+                loadFile(lang);
+                console.log("Language changed to:", lang);
+                document.querySelector(".topMenuButton img").src = this.querySelector("img").src;
+            });
+        });
+    });
+
+</script>
+
+<!-- <script async defer src="https://scripts.simpleanalyticscdn.com/latest.js"></script>
+<noscript><img src="https://queue.simpleanalyticscdn.com/noscript.gif" alt="" referrerpolicy="no-referrer-when-downgrade" /></noscript> -->
+
+</body>
+</html>
+
