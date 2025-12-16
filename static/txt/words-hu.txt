@@ -848,7 +848,6 @@ szeretettel
 sokaság
 csomó
 majdnem
-anyád
 száz
 ritkán
 gereblyézgetett
@@ -1048,7 +1047,6 @@ másnak
 jobbra
 hangú
 követ
-szar
 tavasszal
 közeli
 nevét
@@ -1652,7 +1650,6 @@ mellettem
 üzeni
 állatok
 úgyhogy
-kaki
 ajtónál
 századik
 interjút
@@ -1926,7 +1923,6 @@ felhők
 ujjong
 ablakon
 talál
-kaka
 tudnak
 segítségével
 teendő
@@ -2045,7 +2041,6 @@ félre
 szerencsére
 édesen
 figyelnem
-hülye
 elfelejtettem
 kérés
 olvasván
@@ -2085,7 +2080,6 @@ amiért
 tarka
 dob
 nemrég
-punci
 amellyel
 útján
 lehetetlen
@@ -2841,7 +2835,6 @@ javára
 szelíd
 vonat
 kedvvel
-segg
 borított
 hazánk
 könyvem
@@ -3601,7 +3594,6 @@ karosszékben
 legújabb
 veti
 tanulmány
-fos
 kétségtelenül
 szoktak
 számom
@@ -4183,7 +4175,6 @@ megél
 mindnyájunk
 szerezni
 kosár
-köcsög
 gyerekeket
 természeti
 kerülni
@@ -4253,7 +4244,6 @@ mindenkinél
 sétát
 meglátogatni
 elkészítendő
-nigger
 menne
 érintetlenül
 felhős
@@ -9855,7 +9845,6 @@ romjai
 bot
 levélben
 nyisd
-szaros
 szemébe
 csárdában
 képpel
