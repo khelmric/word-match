@@ -3587,7 +3587,6 @@ testvérével
 partra
 hozz
 köznapi
-halál
 ellene
 darabokra
 karosszékben
@@ -4112,7 +4111,6 @@ szokták
 zokogó
 hallgatag
 kerestetik
-halála
 legelső
 hazulról
 miénket
@@ -5749,7 +5747,6 @@ tikkadt
 rák
 ártatlan
 elém
-halálos
 utánunk
 edz
 vonzó
@@ -8317,7 +8314,6 @@ szakértelemmel
 lobog
 honos
 riogató
-halált
 szűcs
 keresetemből
 árnyas
