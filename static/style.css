@@ -3,7 +3,7 @@ body {
     display: flex;
     flex-direction: column;
     align-items: center;
-    background-color: #f0f0f0;
+    background-color: #B3E1F8;
     margin: 0;
     padding: 0;
 }
@@ -13,24 +13,51 @@ h1 {
     text-align: center;
     width: 100%;
 }
+.titleText {
+  display: block;
+  font-family: "Arial Rounded MT Bold", "Comic Sans MS", sans-serif;
+  color: white;
+
+  text-shadow:
+    -2px -2px 0 #9ed0f5,
+     2px -2px 0 #9ed0f5,
+    -2px  2px 0 #9ed0f5,
+     2px  2px 0 #9ed0f5,
+     0  4px 6px rgba(0,0,0,0.15);
+}
 #titleText1 {
     display: inline-block;
-    text-decoration: underline overline;
-    color: black;
-    background: #f0f0f0;
     padding-right: 0px;
     font-variant: small-caps;
+    font-family: "Arial Rounded MT Bold", "Comic Sans MS", sans-serif;
+    font-size: 64px;
+    color: #5ea0f5;
+
+    text-shadow:
+        -2px -2px 0 #fff,
+        2px -2px 0 #fff,
+        -2px  2px 0 #fff,
+        2px  2px 0 #fff,
+        0  4px 6px rgba(0,0,0,0.15);
 }
 #titleText2 {
     display: inline-block;
-    text-decoration: underline overline;
-    color: black;
-    background: #f0f0f0;
     padding-left: 0px;
     font-variant: small-caps;
+    font-family: "Arial Rounded MT Bold", "Comic Sans MS", sans-serif;
+    font-size: 64px;
+    color: #5ef5a0;
+
+    text-shadow:
+        -2px -2px 0 #fff,
+        2px -2px 0 #fff,
+        -2px  2px 0 #fff,
+        2px  2px 0 #fff,
+        0  4px 6px rgba(0,0,0,0.15);
 }
 #gameTitle {
     padding-top: 20px;
+    text-align: center;
 }
 #header {
     display: flex;

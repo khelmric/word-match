@@ -27,11 +27,15 @@
      
 </div>
 <div id="gameTitle">
-    <!-- <h1>
-        <div class="inverse_italic" id="titleText1" title="v1.2">Word</div>
-        <div class="italic" id="titleText2" title="v1.2">matcH</div>
-    </h1> -->
-    <img src="static/img/title.png" height="120">
+    <h1>
+        <div id="titleText1" title="v1.2">Word</div>
+        <div id="titleText2" title="v1.2">matcH</div>
+    </h1>
+    <div id="openingItems">
+        <img src="static/img/title.png" height="180"><br>
+        <!--<h3 class="titleText">FIND THE PAIR</h3>-->
+        <h3 class="titleText">TALÁLD MEG A PÁROKAT</h3>
+    </div>
 </div>
 
 <div id="settingsPopup" class="popup">
@@ -253,6 +257,7 @@
         document.getElementById("openSettingsBtn").classList.add("hidden");
         document.getElementById("shareUrlBtn").classList.add("hidden");
         document.getElementById("langBtn").classList.add("hidden");
+        document.getElementById("openingItems").classList.add("hidden");
         level = 1;
         lives = 5;
         countdownTime = 20;
@@ -272,6 +277,7 @@
         document.getElementById("openSettingsBtn").classList.remove("hidden");
         document.getElementById("shareUrlBtn").classList.remove("hidden");
         document.getElementById("langBtn").classList.remove("hidden");
+        document.getElementById("openingItems").classList.remove("hidden");
     }
 
     function resetGame() {
