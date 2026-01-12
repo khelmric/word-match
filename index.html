@@ -16,14 +16,16 @@
 
     <div id="langBtn" class="lang-dropdown">
         <a class="topMenuButton">
-            <img src="static/img/flaghu.png" width="20" height="20">
+            <img id="currentFlag" src="static/img/flaghu.png" width="20" height="20">
         </a>
         <div class="lang-dropdown-content">
-            <a data-lang="hu"><img src="static/img/flaghu.png" width="20" height="20"> Magyar</a>
+            <a data-lang="hu"><img src="static/img/flaghu.png" width="20"> Magyar</a>
+            <a data-lang="en"><img src="static/img/flagen.png" width="20"> English</a>
+            <a data-lang="de"><img src="static/img/flagde.png" width="20"> Deutsch</a>
         </div>
     </div>
 
-    <a id="shareUrlBtn" class="topMenuButton" title="Link másolása"
+    <a id="shareUrlBtn" class="topMenuButton" title=""
        onclick="navigator.clipboard.writeText(window.location.href)">📋</a>
 </div>
 
@@ -35,7 +37,7 @@
     </h1>
     <div id="openingItems">
         <img src="static/img/title.png" height="180"><br>
-        <h3 class="titleText">TALÁLD MEG A PÁROKAT</h3>
+        <h3 id="subtitle" class="titleText"></h3>
     </div>
 </div>
 
@@ -46,10 +48,10 @@
         <a class="topMenuButton" title="Kávé ☕" href="https://buymeacoffee.com/khelmric">☕</a>
     </div>
 
-    <div class="popup-header">Beállítások</div>
+    <div id="settingsTitle" class="popup-header"></div>
     <div class="popup-body">
         <form id="settingsForm">
-            <label>Max szótag:</label>
+            <label id="lblSyllables"></label>
             <select id="syllables" name="syllables">
                 <option value="1">1</option>
                 <option value="2">2</option>
@@ -60,21 +62,21 @@
             </select>
 
             <br><br>
-            <label>Szükséges betűk:</label><br>
+            <label id="lblInclude"></label><br>
             <select id="includeChar1" name="includeChar1" class="include-char-dropdown"></select>
             <select id="includeChar2" name="includeChar2" class="include-char-dropdown"></select>
             <select id="includeChar3" name="includeChar3" class="include-char-dropdown"></select>
 
             <br><br>
-            <label>Kizárandó betűk:</label>
+            <label id="lblExclude"></label>
             <div id="excludeCharsContainer"></div>
 
             <br><br>
-            <label>Visszaszámláló:</label>
+            <label id="lblTimer"></label>
             <input id="counter" name="counter" type="number" value="20" min="5" max="99"> s
 
             <br><br>
-            <button class="bigButton" type="button" onclick="submitSettings()">OK</button>
+            <button id="btnOk" class="bigButton" type="button" onclick="submitSettings()"></button>
         </form>
     </div>
 </div>
@@ -84,14 +86,14 @@
     <div id="countdown" class="hidden">0</div>
     <div id="status" class="hidden">
         <span id="lives"></span>
-        <span id="level">1. szint</span>
+        <span id="level"></span>
     </div>
 </div>
 
 <!-- ================= CONTROLS ================= -->
 <div id="controls">
-    <button id="startButton">Start</button>
-    <button id="stopButton" class="hidden">Stop</button>
+    <button id="startButton"></button>
+    <button id="stopButton" class="hidden"></button>
 </div>
 
 <!-- ================= GAME ================= -->
@@ -108,6 +110,51 @@
 const settingsState = {
     syllables: 100,   // default = 5+
     counter: 20
+};
+/* ---------- LANGUAGE DATA ---------- */
+const i18n = {
+    hu: {
+        subtitle: "TALÁLD MEG A PÁROKAT",
+        settings: "Beállítások",
+        syllables: "Max szótag:",
+        include: "Szükséges betűk:",
+        exclude: "Kizárandó betűk:",
+        timer: "Visszaszámláló:",
+        ok: "OK",
+        start: "Start",
+        stop: "Stop",
+        level: n => `${n}. szint`,
+        stopped: lvl => `🛑 Játék megállítva. Elért szint: ${lvl}`,
+        gameover: lvl => `🏆 Játék vége. Elért szint: ${lvl}`
+    },
+    en: {
+        subtitle: "FIND THE PAIRS",
+        settings: "Settings",
+        syllables: "Max syllables:",
+        include: "Required letters:",
+        exclude: "Excluded letters:",
+        timer: "Countdown:",
+        ok: "OK",
+        start: "Start",
+        stop: "Stop",
+        level: n => `Level ${n}`,
+        stopped: lvl => `🛑 Game stopped. Reached level: ${lvl}`,
+        gameover: lvl => `🏆 Game over. Reached level: ${lvl}`
+    },
+    de: {
+        subtitle: "FINDE DIE PAARE",
+        settings: "Einstellungen",
+        syllables: "Max. Silben:",
+        include: "Erforderliche Buchstaben:",
+        exclude: "Ausgeschlossene Buchstaben:",
+        timer: "Countdown:",
+        ok: "OK",
+        start: "Start",
+        stop: "Stop",
+        level: n => `Level ${n}`,
+        stopped: lvl => `🛑 Spiel gestoppt. Erreichtes Level: ${lvl}`,
+        gameover: lvl => `🏆 Spiel vorbei. Erreichtes Level: ${lvl}`
+    }
 };
 /* ---------- DOM CACHE ---------- */
 const dom = {
@@ -128,9 +175,40 @@ const dom = {
     settingsPopup: document.getElementById("settingsPopup")
 };
 
-/* ---------- LANGUAGE ---------- */
+/* ---------- LANGUAGE INIT ---------- */
 let lang = localStorage.getItem("lang")?.trim() || "hu";
+document.documentElement.lang = lang;
 localStorage.setItem("lang", lang);
+
+/* ---------- APPLY LANGUAGE ---------- */
+function applyLang() {
+    const t = i18n[lang];
+    subtitle.textContent = t.subtitle;
+    settingsTitle.textContent = t.settings;
+    lblSyllables.textContent = t.syllables;
+    lblInclude.textContent = t.include;
+    lblExclude.textContent = t.exclude;
+    lblTimer.textContent = t.timer;
+    btnOk.textContent = t.ok;
+    startButton.textContent = t.start;
+    stopButton.textContent = t.stop;
+    level.textContent = t.level(1);
+    currentFlag.src = `static/img/flag${lang}.png`;
+}
+
+/* ---------- LANGUAGE SWITCH ---------- */
+document.querySelectorAll(".lang-dropdown-content a").forEach(a => {
+    a.onclick = async () => {
+        lang = a.dataset.lang;
+        localStorage.setItem("lang", lang);
+
+        await loadFile(lang);
+        applyLang();
+
+        buildSettingsUI();   // rebuild letters for new language
+        resetSettingsUI();   // reset everything
+    };
+});
 
 /* ---------- GAME STATE ---------- */
 let words = [];
@@ -143,23 +221,67 @@ let wordCount = 4;
 let roundTimer;
 
 /* ---------- LETTERS ---------- */
-const letters = [
-    { letter:"a",id:"a" },{ letter:"á",id:"aa" },{ letter:"b",id:"b" },
-    { letter:"c",id:"c" },{ letter:"cs",id:"cs" },{ letter:"d",id:"d" },
-    { letter:"dz",id:"dz" },{ letter:"dzs",id:"dzs" },{ letter:"e",id:"e" },
-    { letter:"é",id:"ee" },{ letter:"f",id:"f" },{ letter:"g",id:"g" },
-    { letter:"gy",id:"gy" },{ letter:"h",id:"h" },{ letter:"i",id:"i" },
-    { letter:"í",id:"ii" },{ letter:"j",id:"j" },{ letter:"k",id:"k" },
-    { letter:"l",id:"l" },{ letter:"ly",id:"ly" },{ letter:"m",id:"m" },
-    { letter:"n",id:"n" },{ letter:"ny",id:"ny" },{ letter:"o",id:"o" },
-    { letter:"ó",id:"oo" },{ letter:"ö",id:"oe" },{ letter:"ő",id:"ooe" },
-    { letter:"p",id:"p" },{ letter:"q",id:"q" },{ letter:"r",id:"r" },
-    { letter:"s",id:"s" },{ letter:"sz",id:"sz" },{ letter:"t",id:"t" },
-    { letter:"ty",id:"ty" },{ letter:"u",id:"u" },{ letter:"ú",id:"uu" },
-    { letter:"ü",id:"ue" },{ letter:"ű",id:"uue" },{ letter:"v",id:"v" },
-    { letter:"w",id:"w" },{ letter:"x",id:"x" },{ letter:"y",id:"y" },
-    { letter:"z",id:"z" },{ letter:"zs",id:"zs" }
-];
+const LETTER_SETS = {
+    hu: [
+        { letter:"a",id:"a" },{ letter:"á",id:"aa" },{ letter:"b",id:"b" },
+        { letter:"c",id:"c" },{ letter:"cs",id:"cs" },{ letter:"d",id:"d" },
+        { letter:"dz",id:"dz" },{ letter:"dzs",id:"dzs" },{ letter:"e",id:"e" },
+        { letter:"é",id:"ee" },{ letter:"f",id:"f" },{ letter:"g",id:"g" },
+        { letter:"gy",id:"gy" },{ letter:"h",id:"h" },{ letter:"i",id:"i" },
+        { letter:"í",id:"ii" },{ letter:"j",id:"j" },{ letter:"k",id:"k" },
+        { letter:"l",id:"l" },{ letter:"ly",id:"ly" },{ letter:"m",id:"m" },
+        { letter:"n",id:"n" },{ letter:"ny",id:"ny" },{ letter:"o",id:"o" },
+        { letter:"ó",id:"oo" },{ letter:"ö",id:"oe" },{ letter:"ő",id:"ooe" },
+        { letter:"p",id:"p" },{ letter:"r",id:"r" },
+        { letter:"s",id:"s" },{ letter:"sz",id:"sz" },{ letter:"t",id:"t" },
+        { letter:"ty",id:"ty" },{ letter:"u",id:"u" },{ letter:"ú",id:"uu" },
+        { letter:"ü",id:"ue" },{ letter:"ű",id:"uue" },{ letter:"v",id:"v" },
+        { letter:"z",id:"z" },{ letter:"zs",id:"zs" }
+    ],
+
+    en: [
+        { letter:"a",id:"a" },{ letter:"b",id:"b" },{ letter:"c",id:"c" },
+        { letter:"d",id:"d" },{ letter:"e",id:"e" },{ letter:"f",id:"f" },
+        { letter:"g",id:"g" },{ letter:"h",id:"h" },{ letter:"i",id:"i" },
+        { letter:"j",id:"j" },{ letter:"k",id:"k" },{ letter:"l",id:"l" },
+        { letter:"m",id:"m" },{ letter:"n",id:"n" },{ letter:"o",id:"o" },
+        { letter:"p",id:"p" },{ letter:"q",id:"q" },{ letter:"r",id:"r" },
+        { letter:"s",id:"s" },{ letter:"t",id:"t" },{ letter:"u",id:"u" },
+        { letter:"v",id:"v" },{ letter:"w",id:"w" },{ letter:"x",id:"x" },
+        { letter:"y",id:"y" },{ letter:"z",id:"z" }
+    ],
+
+    de: [
+        { letter:"a",id:"a" },{ letter:"ä",id:"ae" },
+        { letter:"b",id:"b" },
+        { letter:"c",id:"c" },
+        { letter:"d",id:"d" },
+        { letter:"e",id:"e" },
+        { letter:"f",id:"f" },
+        { letter:"g",id:"g" },
+        { letter:"h",id:"h" },
+        { letter:"i",id:"i" },
+        { letter:"j",id:"j" },
+        { letter:"k",id:"k" },
+        { letter:"l",id:"l" },
+        { letter:"m",id:"m" },
+        { letter:"n",id:"n" },
+        { letter:"o",id:"o" },{ letter:"ö",id:"oe" },
+        { letter:"p",id:"p" },
+        { letter:"q",id:"q" },
+        { letter:"r",id:"r" },
+        { letter:"s",id:"s" },{ letter:"ß",id:"ss" },
+        { letter:"t",id:"t" },
+        { letter:"u",id:"u" },{ letter:"ü",id:"ue" },
+        { letter:"v",id:"v" },
+        { letter:"w",id:"w" },
+        { letter:"x",id:"x" },
+        { letter:"y",id:"y" },
+        { letter:"z",id:"z" }
+    ]
+};
+
+const letters = LETTER_SETS[lang] || LETTER_SETS.hu;
 
 /* ---------- INIT UI ---------- */
 document.querySelectorAll(".include-char-dropdown").forEach(dd => {
@@ -179,12 +301,66 @@ letters.forEach(l => {
     excludeContainer.appendChild(label);
 });
 
+/* ---------- APPLY URL SETTINGS ---------- */
+function applySettingsFromUrl() {
+    const params = new URLSearchParams(location.search);
+
+    // syllables
+    if (params.has("syllables")) {
+        dom.syllables.value = params.get("syllables");
+    }
+
+    // counter
+    if (params.has("counter")) {
+        dom.counter.value = params.get("counter");
+    }
+
+    // include chars
+    ["includeChar1", "includeChar2", "includeChar3"].forEach(id => {
+        if (params.has(id)) {
+            const el = document.getElementById(id);
+            el.value = params.get(id) || "";
+        }
+    });
+
+    // exclude chars
+    letters.forEach(l => {
+        const key = `exclude_${l.id}`;
+        if (params.has(key)) {
+            const cb = document.getElementById(key);
+            if (cb) cb.checked = true;
+        }
+    });
+}
+
+function rebuildCharFilters() {
+    includedChars = [];
+    excludedChars = [];
+
+    // includes
+    ["includeChar1", "includeChar2", "includeChar3"].forEach(id => {
+        const v = document.getElementById(id).value;
+        if (v) includedChars.push(v);
+    });
+
+    // excludes
+    letters.forEach(l => {
+        const cb = document.getElementById(`exclude_${l.id}`);
+        if (cb?.checked) excludedChars.push(l.letter);
+    });
+}
+
+
+
 /* ---------- FILE LOAD ---------- */
 async function loadFile(lang){
     const res = await fetch(`static/txt/words-${lang}.txt`);
     const txt = await res.text();
     words = txt.split("\n").map(w=>w.trim()).filter(Boolean);
 }
+
+applyLang();
+applySettingsFromUrl();
 loadFile(lang);
 
 /* ---------- GAME LOGIC ---------- */
@@ -196,14 +372,14 @@ function toggleItems(){
 function startGame(){
     lives=5; level=1; wordCount=4; levelJump=5;
     dom.lives.textContent=getLives(lives);
-    dom.level.textContent="1. szint";
+    dom.level.textContent=i18n[lang].level(level);
     toggleItems(); resetGame();
 }
 
 function stopGame(){
     clearInterval(roundTimer);
     toggleItems();
-    alert(`🛑 Játék megállítva. Elért szint: ${level}`);
+    alert(i18n[lang].stopped(level));
 }
 
 function resetGame(){
@@ -229,7 +405,7 @@ function startTimer(common){
     function fail(){
         if(--lives<=0){
             toggleItems();
-            alert(`☠️ Játék vége. Elért szint: ${level}`);
+            alert(i18n[lang].gameover(level));
         }else{
             dom.lives.textContent=getLives(lives);
             resetGame();
@@ -242,6 +418,9 @@ function render(card,arr){
         const d=document.createElement("div");
         d.textContent=w;
         d.className="word";
+        d.style.color = getRandomColor();
+        d.style.fontSize = `${Math.floor(Math.random() * 20) + 20}px`;
+        d.style.fontFamily = getRandomFont();
         d.onclick=()=>pick(w);
         card.appendChild(d);
     });
@@ -251,12 +430,12 @@ function pick(word){
     clearInterval(roundTimer);
     if(dom.card1.textContent.includes(word)&&dom.card2.textContent.includes(word)){
         if(--levelJump===0){ level++; wordCount++; levelJump=5; }
-        dom.level.textContent=`${level}. szint`;
+        dom.level.textContent = i18n[lang].level(level);
         resetGame();
     }else{
         if(--lives<=0){
             toggleItems();
-            alert(`☠️ Játék vége. Elért szint: ${level}`);
+            alert(i18n[lang].gameover(level));
         }else{
             dom.lives.textContent=getLives(lives);
             resetGame();
@@ -268,13 +447,58 @@ function pick(word){
 const shuffle=a=>a.sort(()=>Math.random()-0.5);
 const getLives=n=>"🖤".repeat(5-n)+"💚".repeat(n);
 
-function getUniqueWords(arr,c){
-    const max=Number(dom.syllables.value);
-    return shuffle(arr.filter(w=>countSyllables(w)<=max)).slice(0,c);
+function getUniqueWords(arr, c) {
+    rebuildCharFilters();
+
+    const max = Number(dom.syllables.value);
+
+    return shuffle(
+        arr.filter(w => {
+            // syllables
+            if (countSyllables(w) > max) return false;
+
+            // include chars
+            for (const ch of includedChars) {
+                if (!w.includes(ch)) return false;
+            }
+
+            // exclude chars
+            for (const ch of excludedChars) {
+                if (w.includes(ch)) return false;
+            }
+
+            return true;
+        })
+    ).slice(0, c);
 }
 
 function countSyllables(w){
-    return (w.match(/[aáeéiíoóöőuúüű]/gi)||[]).length||1;
+    // HU
+    if (lang === "hu") { 
+        return (w.match(/[aáeéiíoóöőuúüű]/gi)||[]).length||1;
+    }
+    // DE
+    if (lang === "de") {
+        return (w.match(/[aeiouyäöü]/gi) || []).length || 1;
+    }
+    // EN
+    return (w.match(/[aeiouy]/gi) || []).length || 1;
+
+}
+
+function getRandomColor() {
+    /*const letters = "0123456789ABCDEF";*/
+    const letters = "0123456789ABCD";
+    let color = "#";
+    for (let i = 0; i < 6; i++) {
+        color += letters[Math.floor(Math.random() * 16)];
+    }
+    return color;
+}
+
+function getRandomFont() {
+    const fonts = ["Arial", "Verdana", "Times New Roman", "Courier New", "Georgia"];
+    return fonts[Math.floor(Math.random() * fonts.length)];
 }
 
 /* ---------- SETTINGS ---------- */
@@ -288,7 +512,24 @@ function submitSettings(){
     location.href=`${location.pathname}?${p}`;
 }
 function resetSettings(){ location.href=location.pathname; }
-function goHome(){ location.reload(); }
+function goHome(){ 
+    window.location.replace(window.location.pathname);
+}
+
+/* ---------- RESET SETTINGS ---------- */
+function resetSettingsUI() {
+    // defaults
+    dom.syllables.value = 100;   // 5+
+    dom.counter.value = 20;
+
+    // clear include dropdowns
+    document.querySelectorAll(".include-char-dropdown")
+        .forEach(dd => dd.value = "");
+
+    // uncheck all exclude checkboxes
+    document.querySelectorAll("#excludeCharsContainer input[type=checkbox]")
+        .forEach(cb => cb.checked = false);
+}
 
 /* ---------- EVENTS ---------- */
 dom.start.onclick=startGame;
