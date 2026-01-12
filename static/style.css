@@ -137,6 +137,18 @@ h1 {
 #startButton {
     background-color: #4CAF50;
     color: white;
+    transition: all 0.3s ease-in-out;
+    animation: startButtonBlink 1s infinite;
+}
+/*  startButton animation */
+@keyframes startButtonBlink {
+    0% { transform: scale(1); }
+    50% { transform: scale(1.1); }
+    100% { transform: scale(1); }
+
+}
+#startButton:hover {
+    background-color: #2C8F30;
 }
 #stopButton {
     background-color: #f44336;
