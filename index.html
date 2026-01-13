@@ -178,6 +178,7 @@ const i18n = {
 };
 /* ---------- DOM CACHE ---------- */
 const dom = {
+    gameTitle: document.getElementById("gameTitle"),
     start: document.getElementById("startButton"),
     stop: document.getElementById("stopButton"),
     openSettingsBtn: document.getElementById("openSettingsBtn"),
@@ -395,11 +396,11 @@ loadFile(lang);
 /* ---------- GAME LOGIC ---------- */
 function toggleItems(hide){
     if (hide === true ) {
-        ["start","openingItems","openSettingsBtn","langBtn","shareUrlBtn"].forEach(k=>dom[k].classList.add("hidden"));
+        ["start","gameTitle","openingItems","openSettingsBtn","langBtn","shareUrlBtn"].forEach(k=>dom[k].classList.add("hidden"));
         ["stop"].forEach(k=>dom[k].classList.remove("hidden"));
         ["status","countdown","game"].forEach(id=>document.getElementById(id).classList.remove("hidden"));
     } else {
-        ["start","openingItems","openSettingsBtn","langBtn","shareUrlBtn"].forEach(k=>dom[k].classList.remove("hidden"));
+        ["start","gameTitle","openingItems","openSettingsBtn","langBtn","shareUrlBtn"].forEach(k=>dom[k].classList.remove("hidden"));
         ["stop"].forEach(k=>dom[k].classList.add("hidden"));
         ["status","countdown","game"].forEach(id=>document.getElementById(id).classList.add("hidden"));
         toggleSettings();
