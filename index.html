@@ -196,7 +196,7 @@ const dom = {
 };
 
 /* ---------- LANGUAGE INIT ---------- */
-let lang = localStorage.getItem("lang")?.trim() || "hu";
+lang = getInitialLang();
 document.documentElement.lang = lang;
 localStorage.setItem("lang", lang);
 toggleSettings();
@@ -221,15 +221,21 @@ function applyLang() {
 document.querySelectorAll(".lang-dropdown-content a").forEach(a => {
     a.onclick = async () => {
         lang = a.dataset.lang;
+
+        // save preference
         localStorage.setItem("lang", lang);
+
+        // update URL without reloading
+        const params = new URLSearchParams(location.search);
+        params.set("lang", lang);
+        history.replaceState(null, "", `${location.pathname}?${params}`);
 
         await loadFile(lang);
         applyLang();
 
         toggleSettings();
-        buildSettingsUI();   // rebuild letters for new language
-        resetSettingsUI();   // reset everything
-        goHome();
+        buildSettingsUI();
+        resetSettingsUI();
     };
 });
 
@@ -550,9 +556,6 @@ function getInitialLang() {
     return localStorage.getItem("lang") || "hu";
 }
 
-let lang = getInitialLang();
-document.documentElement.lang = lang;
-
 /* ---------- SETTINGS ---------- */
 document.getElementById("openSettingsBtn").onclick = () => {
     const isOpen = dom.settingsPopup.classList.toggle("active");
@@ -560,12 +563,13 @@ document.getElementById("openSettingsBtn").onclick = () => {
     dom.start.classList.toggle("hidden", isOpen);
 };
 function submitSettings(){
-    const p=new URLSearchParams(new FormData(settingsForm));
-    location.href=`${location.pathname}?${p}`;
+    const p = new URLSearchParams(new FormData(settingsForm));
+    p.set("lang", lang);   // keep language
+    location.href = `${location.pathname}?${p}`;
 }
 function resetSettings(){ location.href=location.pathname; }
 function goHome(){ 
-    window.location.replace(window.location.pathname);
+    window.location.replace(`${location.pathname}?lang=${lang}`);
 }
 
 /* ---------- RESET SETTINGS ---------- */
