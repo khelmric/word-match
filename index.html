@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>WordMatch</title>
-    <link rel="icon" type="image/x-icon" href="static/img/favicon.ico">
+    <link rel="icon" type="image/x-icon" href="static/img/favicon.png">
     <link rel="stylesheet" href="static/style.css">
 </head>
 <body>
@@ -22,6 +22,10 @@
             <a data-lang="hu"><img src="static/img/flaghu.png" width="20"> Magyar</a>
             <a data-lang="en"><img src="static/img/flagen.png" width="20"> English</a>
             <a data-lang="de"><img src="static/img/flagde.png" width="20"> Deutsch</a>
+            <a data-lang="symbols" style="font-size: 1.5em;"><img src="static/img/flagsymbols.png" width="20"> 
+                <span style="color: red;">■</span><span style="color: purple;">✭</span><span style="color: blue;">●</span><span style="color: green;">▲</span>
+            </a>
+            <a data-lang="nature"><img src="static/img/flagnature.png" width="20"> 🐢🦆🐞🦈</a>
         </div>
     </div>
 
@@ -112,6 +116,20 @@ const settingsState = {
     counter: 20
 };
 /* ---------- LANGUAGE DATA ---------- */
+const BASE_SYMBOLS = {
+    subtitle: "",
+    settings: "",
+    syllables: "",
+    include: "",
+    exclude: "",
+    timer: "",
+    ok: "OK",
+    start: "Start",
+    stop: "Stop",
+    level: n => `Level ${n}`,
+    stopped: lvl => `🛑 Game stopped. Reached level: ${lvl}`,
+    gameover: lvl => `🏆 Game over. Reached level: ${lvl}`
+};
 const i18n = {
     hu: {
         subtitle: "TALÁLD MEG A PÁROKAT",
@@ -154,7 +172,9 @@ const i18n = {
         level: n => `Level ${n}`,
         stopped: lvl => `🛑 Spiel gestoppt. Erreichtes Level: ${lvl}`,
         gameover: lvl => `🏆 Spiel vorbei. Erreichtes Level: ${lvl}`
-    }
+    },
+    symbols: BASE_SYMBOLS,
+    nature: BASE_SYMBOLS
 };
 /* ---------- DOM CACHE ---------- */
 const dom = {
@@ -179,6 +199,7 @@ const dom = {
 let lang = localStorage.getItem("lang")?.trim() || "hu";
 document.documentElement.lang = lang;
 localStorage.setItem("lang", lang);
+toggleSettings();
 
 /* ---------- APPLY LANGUAGE ---------- */
 function applyLang() {
@@ -205,8 +226,10 @@ document.querySelectorAll(".lang-dropdown-content a").forEach(a => {
         await loadFile(lang);
         applyLang();
 
+        toggleSettings();
         buildSettingsUI();   // rebuild letters for new language
         resetSettingsUI();   // reset everything
+        goHome();
     };
 });
 
@@ -354,7 +377,7 @@ function rebuildCharFilters() {
 
 /* ---------- FILE LOAD ---------- */
 async function loadFile(lang){
-    const res = await fetch(`static/txt/words-${lang}.txt`);
+    const res = await fetch(`static/txt/list-${lang}.txt`);
     const txt = await res.text();
     words = txt.split("\n").map(w=>w.trim()).filter(Boolean);
 }
@@ -364,21 +387,29 @@ applySettingsFromUrl();
 loadFile(lang);
 
 /* ---------- GAME LOGIC ---------- */
-function toggleItems(){
-    ["start","stop","openingItems","openSettingsBtn","langBtn","shareUrlBtn"].forEach(k=>dom[k].classList.toggle("hidden"));
-    ["status","countdown","game"].forEach(id=>document.getElementById(id).classList.toggle("hidden"));
+function toggleItems(hide){
+    if (hide === true ) {
+        ["start","openingItems","openSettingsBtn","langBtn","shareUrlBtn"].forEach(k=>dom[k].classList.add("hidden"));
+        ["stop"].forEach(k=>dom[k].classList.remove("hidden"));
+        ["status","countdown","game"].forEach(id=>document.getElementById(id).classList.remove("hidden"));
+    } else {
+        ["start","openingItems","openSettingsBtn","langBtn","shareUrlBtn"].forEach(k=>dom[k].classList.remove("hidden"));
+        ["stop"].forEach(k=>dom[k].classList.add("hidden"));
+        ["status","countdown","game"].forEach(id=>document.getElementById(id).classList.add("hidden"));
+        toggleSettings();
+    }
 }
 
 function startGame(){
     lives=5; level=1; wordCount=4; levelJump=5;
     dom.lives.textContent=getLives(lives);
     dom.level.textContent=i18n[lang].level(level);
-    toggleItems(); resetGame();
+    toggleItems(true); resetGame();
 }
 
 function stopGame(){
     clearInterval(roundTimer);
-    toggleItems();
+    toggleItems(false);
     alert(i18n[lang].stopped(level));
 }
 
@@ -404,7 +435,7 @@ function startTimer(common){
 
     function fail(){
         if(--lives<=0){
-            toggleItems();
+            toggleItems(false);
             alert(i18n[lang].gameover(level));
         }else{
             dom.lives.textContent=getLives(lives);
@@ -418,9 +449,15 @@ function render(card,arr){
         const d=document.createElement("div");
         d.textContent=w;
         d.className="word";
-        d.style.color = getRandomColor();
-        d.style.fontSize = `${Math.floor(Math.random() * 20) + 20}px`;
-        d.style.fontFamily = getRandomFont();
+        if (lang === "symbols" || lang === "nature") { 
+            d.style.color = getRandomColor("3456789ABC");
+            d.style.fontSize = `${Math.floor(Math.random() * 30) + 40}px`;
+            d.style.fontFamily = getRandomFont();
+        } else {
+            d.style.color = getRandomColor("0123456789ABCD");
+            d.style.fontSize = `${Math.floor(Math.random() * 20) + 20}px`;
+            d.style.fontFamily = getRandomFont();
+        }
         d.onclick=()=>pick(w);
         card.appendChild(d);
     });
@@ -434,7 +471,7 @@ function pick(word){
         resetGame();
     }else{
         if(--lives<=0){
-            toggleItems();
+            toggleItems(false);
             alert(i18n[lang].gameover(level));
         }else{
             dom.lives.textContent=getLives(lives);
@@ -486,12 +523,12 @@ function countSyllables(w){
 
 }
 
-function getRandomColor() {
-    /*const letters = "0123456789ABCDEF";*/
-    const letters = "0123456789ABCD";
+function getRandomColor(colorLetters) {
     let color = "#";
     for (let i = 0; i < 6; i++) {
-        color += letters[Math.floor(Math.random() * 16)];
+        color += colorLetters[
+            Math.floor(Math.random() * colorLetters.length)
+        ];
     }
     return color;
 }
@@ -500,6 +537,21 @@ function getRandomFont() {
     const fonts = ["Arial", "Verdana", "Times New Roman", "Courier New", "Georgia"];
     return fonts[Math.floor(Math.random() * fonts.length)];
 }
+
+function getInitialLang() {
+    const params = new URLSearchParams(location.search);
+
+    if (params.has("lang")) {
+        const l = params.get("lang");
+        localStorage.setItem("lang", l);
+        return l;
+    }
+
+    return localStorage.getItem("lang") || "hu";
+}
+
+let lang = getInitialLang();
+document.documentElement.lang = lang;
 
 /* ---------- SETTINGS ---------- */
 document.getElementById("openSettingsBtn").onclick = () => {
@@ -529,6 +581,43 @@ function resetSettingsUI() {
     // uncheck all exclude checkboxes
     document.querySelectorAll("#excludeCharsContainer input[type=checkbox]")
         .forEach(cb => cb.checked = false);
+}
+
+function buildSettingsUI() {
+    // ---------- INCLUDE DROPDOWNS ----------
+    document.querySelectorAll(".include-char-dropdown").forEach(dd => {
+        dd.innerHTML = "";
+        dd.appendChild(new Option("", ""));
+        LETTER_SETS[lang].forEach(l =>
+            dd.appendChild(new Option(l.letter, l.letter))
+        );
+    });
+
+    // ---------- EXCLUDE CHECKBOXES ----------
+    const excludeContainer = document.getElementById("excludeCharsContainer");
+    excludeContainer.innerHTML = "";
+
+    LETTER_SETS[lang].forEach(l => {
+        const label = document.createElement("label");
+        label.className = "nowrap";
+
+        const cb = document.createElement("input");
+        cb.type = "checkbox";
+        cb.id = `exclude_${l.id}`;
+        cb.name = cb.id;
+
+        label.append(cb, l.letter);
+        excludeContainer.appendChild(label);
+    });
+}
+
+/* ---------- TOGGLE SETTINGS ---------- */
+function toggleSettings() {
+    if (lang === "symbols" || lang === "nature") { 
+        document.getElementById("openSettingsBtn").classList.add("hidden");
+    } else {
+        document.getElementById("openSettingsBtn").classList.remove("hidden");
+    }
 }
 
 /* ---------- EVENTS ---------- */
