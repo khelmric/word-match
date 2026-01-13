@@ -40,7 +40,7 @@
         <div id="titleText2" title="v1.2">matcH</div>
     </h1>
     <div id="openingItems">
-        <img src="static/img/title.png" height="180"><br>
+        <img src="static/img/title.png" height="80"><br>
         <h3 id="subtitle" class="titleText"></h3>
     </div>
 </div>
@@ -77,7 +77,7 @@
 
             <br><br>
             <label id="lblTimer"></label>
-            <input id="counter" name="counter" type="number" value="20" min="5" max="99"> s
+            <input id="counter" name="counter" type="number" value="15" min="5" max="99"> s
 
             <br><br>
             <button id="btnOk" class="bigButton" type="button" onclick="submitSettings()"></button>
@@ -113,7 +113,7 @@
 /* ---------- DEFAULTS ---------- */
 const settingsState = {
     syllables: 100,   // default = 5+
-    counter: 20
+    counter: 15
 };
 /* ---------- LANGUAGE DATA ---------- */
 const BASE_SYMBOLS = {
@@ -573,11 +573,39 @@ function goHome(){
     window.location.replace(`${location.pathname}?lang=${lang}`);
 }
 
+/* ---------- CLICK ON A FLAG ---------- */
+const langBtn = document.getElementById("langBtn");
+
+langBtn.querySelector(".topMenuButton").onclick = (e) => {
+    e.stopPropagation();
+    langBtn.classList.toggle("open");
+};
+
+document.querySelectorAll(".lang-dropdown-content a").forEach(a => {
+    a.onclick = () => {
+        lang = a.dataset.lang;
+        localStorage.setItem("lang", lang);
+
+        langBtn.classList.remove("open");
+
+        loadFile(lang);
+        applyLang();
+        toggleSettings();
+        buildSettingsUI();
+        resetSettingsUI();
+        goHome();
+    };
+});
+
+document.addEventListener("click", () => {
+    langBtn.classList.remove("open");
+});
+
 /* ---------- RESET SETTINGS ---------- */
 function resetSettingsUI() {
     // defaults
     dom.syllables.value = 100;   // 5+
-    dom.counter.value = 20;
+    dom.counter.value = 15;
 
     // clear include dropdowns
     document.querySelectorAll(".include-char-dropdown")

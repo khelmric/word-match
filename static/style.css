@@ -57,6 +57,7 @@ h1 {
 }
 #gameTitle {
     text-align: center;
+    margin-top: 20px;
 }
 #header {
     display: flex;
@@ -304,12 +305,11 @@ h1 {
     display: block;
 }
 
-.lang-dropdown-content a:hover {
-    background-color: #f1f1f1
-}
-
-.lang-dropdown:hover .lang-dropdown-content {
+.lang-dropdown.open .lang-dropdown-content {
     display: block;
+}
+.lang-dropdown-content a:hover {
+    background-color: #c9c9c9;
 }
 .italic {
     -webkit-transform: skew(-5deg);
