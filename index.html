@@ -49,7 +49,7 @@
 <div id="settingsPopup" class="popup">
     <div style="float:right">
         <a class="topMenuButton" title="Reset" onclick="resetSettings()">↺</a>
-        <a class="topMenuButton" title="Kávé ☕" href="https://buymeacoffee.com/khelmric">☕</a>
+        <a class="topMenuButton" id="buyMeACoffee" href="https://buymeacoffee.com/khelmric">☕</a>
     </div>
 
     <div id="settingsTitle" class="popup-header"></div>
@@ -134,6 +134,7 @@ const i18n = {
     hu: {
         subtitle: "TALÁLD MEG A PÁROKAT",
         settings: "Beállítások",
+        buyMeACoffee: "Hívj meg egy kávéra, ha tetszik ☕",
         syllables: "Max szótag:",
         include: "Szükséges betűk:",
         exclude: "Kizárandó betűk:",
@@ -148,6 +149,7 @@ const i18n = {
     en: {
         subtitle: "FIND THE PAIRS",
         settings: "Settings",
+        buyMeACoffee: "Buy me a coffee if you like it ☕",
         syllables: "Max syllables:",
         include: "Required letters:",
         exclude: "Excluded letters:",
@@ -162,6 +164,7 @@ const i18n = {
     de: {
         subtitle: "FINDE DIE PAARE",
         settings: "Einstellungen",
+        buyMeACoffee: "Gefällt dir das? Unterstütze mich mit einem Kaffee ☕",
         syllables: "Max. Silben:",
         include: "Erforderliche Buchstaben:",
         exclude: "Ausgeschlossene Buchstaben:",
@@ -193,7 +196,8 @@ const dom = {
     message: document.getElementById("message"),
     syllables: document.getElementById("syllables"),
     counter: document.getElementById("counter"),
-    settingsPopup: document.getElementById("settingsPopup")
+    settingsPopup: document.getElementById("settingsPopup"),
+    buyMeACoffee: document.getElementById("settingsPopup")
 };
 
 /* ---------- LANGUAGE INIT ---------- */
@@ -216,6 +220,7 @@ function applyLang() {
     stopButton.textContent = t.stop;
     level.textContent = t.level(1);
     currentFlag.src = `static/img/flag${lang}.png`;
+    buyMeACoffee.title = t.buyMeACoffee;
 }
 
 /* ---------- LANGUAGE SWITCH ---------- */
