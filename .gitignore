@@ -1,2 +1,4 @@
 static/txt/api*
 static/txt/remove*
+tmp
+tmp/*
